@@ -9,9 +9,8 @@ WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
 GENOME=$WKDIR/required_files/genome/*.fasta
 FEATURES=$WKDIR/required_files/features/*.gff
-ADAPT1=$(cat $WKDIR/required_files/config_file.txt | grep Read1: | cut -d ":" -f 2)
-#ADAPT2=$(cat $WKDIR/required_files/config_file.txt | grep Read2: | cut -d ":" -f 2) # uncomment this for paired-end data
-rRNA=$WKDIR/required_files/Ca_A22chrAM_rRNAloci.bed
+ADAPT1=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+ADAPT2=GATCGGAAGAGCACACGTCTGAACTCCAGTCACGGATGACTATCTCGTATGCCGTCTTCTGCTTG
 mkdir $WKDIR/QC
 PICARD=$WKDIR/required_files/picard.jar
 
@@ -113,11 +112,41 @@ done
 
 
 
-# (3) Run alignment
+multiqc -s -o $WKDIR/QC $WKDIR/QC
 
 
+# Preparation of coverage files for visualization in IGV
 
-# (4) Run featureCounts - Quantification
+mkdir $WKDIR/IGV_files
+
+for i in $WKDIR/*.markdup.bam
+do
+	samtools index $i
+	SNAME=$(echo $i | sed 's:/.*/::g')
+	bamCoverage -b $i -o $WKDIR/IGV_files/$SNAME.bw --normalizeUsing CPM -p $THREAD
+done
+
+
+# Count reads
+
+mkdir $WKDIR/count
+mkdir $WKDIR/diff_expr_analysis
+
+for i in $WKDIR/*.markdup.bam
+  do
+  htseq-count -f bam -s no -t gene -i ID $i $FEATURES > $i.count.txt
+  mv $i.count.txt $WKDIR/count
+done
+
+for i in $WKDIR/count/*.count.txt
+do
+	head -n -5 $i > $i.crop.txt  # clear count files for flags
+done
+
+
+cp $WKDIR/count/*.crop.txt $WKDIR/diff_expr_analysis
+cp $FILES/edgeR_analysis.R $WKDIR/diff_expr_analysis
+cp $FILES/Targets.txt $WKDIR/diff_expr_analysis
 
 duration=$SECONDS
 echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
