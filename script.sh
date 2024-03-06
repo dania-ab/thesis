@@ -2,7 +2,7 @@
 
 SECONDS = 0
 
-# Preparation and setup of required files (RNASeq folder with req_files folder inside)
+# Preparation and setup of required files 
 
 FILES=$(pwd)
 WKDIR=$(echo $FILES | sed 's:/required_files::g')
@@ -28,11 +28,7 @@ read -p 'Are the data paired-end? (yes or no): ' PAIRED
 read -p 'How many threads (cores) should be used for the analysis (use 1 if you are not sure): ' THREAD
 
 
-
-# within your working folder, other folders: HISAT2 data quants script
-
-# (1) 
-# QC of raw data
+# (1) QC of raw data
 
 if [ $QCRAW == 'yes' ]
 then
@@ -73,8 +69,7 @@ else
 	exit
 fi
 
-# (2) 
-# Adapter removal with cutadapt and mapping of all files with NGM
+# (2)  Adapter removal with cutadapt and mapping of all files with NGM
 
 # for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L2_1\.fq\.gz$)')
 for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(R*_1\.fq\.gz$)')
@@ -114,6 +109,8 @@ done
 
 multiqc -s -o $WKDIR/QC $WKDIR/QC
 
+
+############
 
 # Preparation of coverage files for visualization in IGV
 
