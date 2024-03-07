@@ -9,8 +9,8 @@ WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
 GENOME=$WKDIR/required_files/genome/*.fasta
 FEATURES=$WKDIR/required_files/features/*.gff
-ADAPT1=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-ADAPT2=GATCGGAAGAGCACACGTCTGAACTCCAGTCACGGATGACTATCTCGTATGCCGTCTTCTGCTTG
+ADAPT5=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+ADAPT3=GATCGGAAGAGCACACGTCTGAACTCCAGTCACGGATGACTATCTCGTATGCCGTCTTCTGCTTG
 mkdir $WKDIR/QC
 PICARD=$WKDIR/required_files/picard.jar
 
@@ -28,7 +28,7 @@ read -p 'Are the data paired-end? (yes or no): ' PAIRED
 read -p 'How many threads (cores) should be used for the analysis (use 1 if you are not sure): ' THREAD
 
 
-# (1) QC of raw data
+#### (1) QC of raw data ####
 
 if [ $QCRAW == 'yes' ]
 then
@@ -69,19 +69,23 @@ else
 	exit
 fi
 
-# (2)  Adapter removal with cutadapt and mapping of all files with NGM
+#### (2)  Adapter removal with cutadapt ####
 
-# for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L2_1\.fq\.gz$)')
-for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(R*_1\.fq\.gz$)')
+for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
 do
 	i1=$WKDIR/$SNAME
-#	i2=$(echo $i1| sed 's/L2_1.fq.gz/L2_2.fq.gz/')
 	i2=$(echo $i1| sed 's/_1.fq.gz/_2.fq.gz/')
 
-	cutadapt --interleaved -j $THREAD -q 30 -O 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o $i1.trimmed.fq.gz -p $i2.trimmed.fq.gz $i1 $i2  #2>$WKDIR/QC/Cutadapt_$SNAME.txt   # removes Illumina TrueSeq adapters from reads (change -a for different adapters), -j specifies number of cores to use, remove if not sure
-	echo "it okey"
-	#rm $i
+# need to manually check the fastq files to see if theres 5' and 3' adapters on BOTH the ends or is it 5' on forward, 3' on reverse
 
+	cutadapt -j $THREAD -q 30 -O 1 -a $ADAPT5 -A $ADAPT3 -o $i1.trimmed.fq.gz -p $i2.trimmed.fq.gz $i1 $i2  
+	echo "Adapters trimmed."
+
+
+
+
+
+#### (3) Mapping of all files with STAR ####
 	ngm -r $GENOME -1 $i1.trimmed.fq.gz -2 $i2.trimmed.fq.gz -o $i1.trimmed.fq.bam -b -p -Q 30 -t $THREAD # add -p for paired-end data, -t 6 is optional - means 6 threads of the processor are used, if you don't know what to do, remove it, --topn 1 --strata causes ngm to write only uniquely mapping reads to the output
 	#rm $i.trimmed.fq.gz
 
@@ -92,6 +96,10 @@ do
 	#bedtools intersect -a $i.trimmed.fq.bam.sort.bam -b $rRNA -v > $i.trimmed.fq.bam.sort.bam.rRNAfilt.bam  # removal of reads mapping to rRNA loci
 	bedtools intersect -a $i1.trimmed.fq.bam.sort.bam -b $rRNA -v > $i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam  # removal of reads mapping to rRNA loci
 	#rm $i.trimmed.fq.bam.sort.bam
+
+
+
+
 
 	# Labelling of duplicated reads and removal of optical duplicates
 	java -jar $PICARD MarkDuplicates REMOVE_SEQUENCING_DUPLICATES=true I=$i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam O=$i1.final.bam M=$WKDIR/QC/$SNAME.markdup.metrics.txt
