@@ -8,7 +8,9 @@ FILES=$(pwd)
 WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
 GENOME=$WKDIR/required_files/genome/*.fasta
-FEATURES=$WKDIR/required_files/features/*.gff
+FEATURES_H=$WKDIR/required_files/features/*.gff
+FEATURES_C=$WKDIR/required_files/features/*.gff
+FEATURES_S=$WKDIR/required_files/features/*.gff
 ADAPT5=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
 ADAPT3=GATCGGAAGAGCACACGTCTGAACTCCAGTCACGGATGACTATCTCGTATGCCGTCTTCTGCTTG
 mkdir $WKDIR/QC
@@ -114,8 +116,23 @@ mkdir $WKDIR/diff_expr_analysis
 
 for i in $WKDIR/*.markdup.bam
   do
-  htseq-count -f bam -s no -t gene -i ID $i $FEATURES > $i.count.txt
+  htseq-count -f bam -s no -t gene -i ID $i $FEATURES_H > $i.count.txt
   mv $i.count.txt $WKDIR/count
+  echo "Human transcripts done"
+done
+
+for i in $WKDIR/*.markdup.bam
+  do
+  htseq-count -f bam -s no -t gene -i ID $i $FEATURES_C > $i.count.txt
+  mv $i.count.txt $WKDIR/count
+  echo "Candida transcripts done"
+done
+
+for i in $WKDIR/*.markdup.bam
+  do
+  htseq-count -f bam -s no -t gene -i ID $i $FEATURES_S > $i.count.txt
+  mv $i.count.txt $WKDIR/count
+  echo "Saccharomyces transcripts done"
 done
 
 for i in $WKDIR/count/*.count.txt
