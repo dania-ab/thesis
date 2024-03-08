@@ -69,6 +69,8 @@ else
 	exit
 fi
 
+
+
 #### (2)  Adapter removal with cutadapt ####
 
 for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
@@ -80,8 +82,6 @@ do
 
 	cutadapt -j $THREAD -q 30 -O 1 -a $ADAPT5 -A $ADAPT3 -o $i1.trimmed.fq.gz -p $i2.trimmed.fq.gz $i1 $i2  
 	echo "Adapters trimmed."
-
-
 
 
 
@@ -107,23 +107,7 @@ multiqc -s -o $WKDIR/QC $WKDIR/QC
 
 
 
-
-
-############
-
-# Preparation of coverage files for visualization in IGV
-
-mkdir $WKDIR/IGV_files
-
-for i in $WKDIR/*.markdup.bam
-do
-	samtools index $i
-	SNAME=$(echo $i | sed 's:/.*/::g')
-	bamCoverage -b $i -o $WKDIR/IGV_files/$SNAME.bw --normalizeUsing CPM -p $THREAD
-done
-
-
-# Count reads
+#### (3) Count reads with HTSeq ####
 
 mkdir $WKDIR/count
 mkdir $WKDIR/diff_expr_analysis
@@ -138,7 +122,6 @@ for i in $WKDIR/count/*.count.txt
 do
 	head -n -5 $i > $i.crop.txt  # clear count files for flags
 done
-
 
 cp $WKDIR/count/*.crop.txt $WKDIR/diff_expr_analysis
 cp $FILES/edgeR_analysis.R $WKDIR/diff_expr_analysis
