@@ -85,25 +85,16 @@ do
 
 
 
-#### (3) Mapping of all files with STAR ####
-	ngm -r $GENOME -1 $i1.trimmed.fq.gz -2 $i2.trimmed.fq.gz -o $i1.trimmed.fq.bam -b -p -Q 30 -t $THREAD # add -p for paired-end data, -t 6 is optional - means 6 threads of the processor are used, if you don't know what to do, remove it, --topn 1 --strata causes ngm to write only uniquely mapping reads to the output
-	#rm $i.trimmed.fq.gz
+#### (3) Mapping of all files with HISAT2 ####
+	hisat2 -x $GENOME -1 $i1.trimmed.fq.gz -2 $i2.trimmed.fq.gz -S $i1.trimmed.sam --threads $THREAD --phred33
 
 	samtools sort -@ $THREAD $i1.trimmed.fq.bam -o $i1.trimmed.fq.bam.sort.bam   # sort .bam files using samtools
 	mv $i1.count.txt $WKDIR/required_files
-	#rm $i1.trimmed.fq.bam
 	
-	#bedtools intersect -a $i.trimmed.fq.bam.sort.bam -b $rRNA -v > $i.trimmed.fq.bam.sort.bam.rRNAfilt.bam  # removal of reads mapping to rRNA loci
 	bedtools intersect -a $i1.trimmed.fq.bam.sort.bam -b $rRNA -v > $i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam  # removal of reads mapping to rRNA loci
-	#rm $i.trimmed.fq.bam.sort.bam
-
-
-
-
 
 	# Labelling of duplicated reads and removal of optical duplicates
 	java -jar $PICARD MarkDuplicates REMOVE_SEQUENCING_DUPLICATES=true I=$i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam O=$i1.final.bam M=$WKDIR/QC/$SNAME.markdup.metrics.txt
-	#rm $i.trimmed.fq.bam.sort.bam.rRNAfilt.bam
 	
 	#Quality control and statistics about mapped samples
 	samtools flagstat $i1.final.bam >> $WKDIR/QC/$SNAME.final.flagstat_analysis.txt   # flagstat analysis
@@ -112,10 +103,10 @@ do
 
 done
 
-
-
-
 multiqc -s -o $WKDIR/QC $WKDIR/QC
+
+
+
 
 
 ############
