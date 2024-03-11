@@ -7,10 +7,10 @@ SECONDS = 0
 FILES=$(pwd)
 WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
-GENOME=$WKDIR/required_files/genome/*.fasta
-FEATURES_H=$WKDIR/required_files/features/*.gff
-FEATURES_C=$WKDIR/required_files/features/*.gff
-FEATURES_S=$WKDIR/required_files/features/*.gff
+GENOME=$WKDIR/required_files/*.fasta
+FEATURES_H=$WKDIR/required_files/*.gff
+FEATURES_C=$WKDIR/required_files/*.gff
+FEATURES_S=$WKDIR/required_files/*.gff
 ADAPT5=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
 ADAPT3=GATCGGAAGAGCACACGTCTGAACTCCAGTCACGGATGACTATCTCGTATGCCGTCTTCTGCTTG
 mkdir $WKDIR/QC
@@ -80,11 +80,8 @@ do
 	i1=$WKDIR/$SNAME
 	i2=$(echo $i1| sed 's/_1.fq.gz/_2.fq.gz/')
 
-# need to manually check the fastq files to see if theres 5' and 3' adapters on BOTH the ends or is it 5' on forward, 3' on reverse
-
 	cutadapt -j $THREAD -q 30 -O 1 -a $ADAPT5 -A $ADAPT3 -o $i1.trimmed.fq.gz -p $i2.trimmed.fq.gz $i1 $i2  
 	echo "Adapters trimmed."
-
 
 
 #### (3) Mapping of all files with HISAT2 ####
@@ -143,6 +140,17 @@ done
 cp $WKDIR/count/*.crop.txt $WKDIR/diff_expr_analysis
 cp $FILES/edgeR_analysis.R $WKDIR/diff_expr_analysis
 cp $FILES/Targets.txt $WKDIR/diff_expr_analysis
+
+# Preparation of coverage files for visualization in IGV
+
+mkdir $WKDIR/IGV_files
+
+for i in $WKDIR/*.markdup.bam
+do
+	samtools index $i
+	SNAME=$(echo $i | sed 's:/.*/::g')
+	bamCoverage -b $i -o $WKDIR/IGV_files/$SNAME.bw --normalizeUsing CPM -p $THREAD
+done
 
 duration=$SECONDS
 echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
