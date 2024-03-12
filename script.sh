@@ -75,7 +75,6 @@ i1=$WKDIR/$SNAME
 i2=$(echo $i1| sed 's/_1.fq.gz/_2.fq.gz/')
 cutadapt -j $THREAD -q 30 -O 1 -a $ADAPT5 -A $ADAPT3 -o $i1.fq.gz -p $i2.fq.gz $i1 $i2  
 echo "Adapters trimmed."
-done
 
 #### (3) Mapping of all files with HISAT2 ####
 hisat2 -x $GENOME -1 $i1.fq.gz -2 $i2.fq.gz -S $i1.trimmed.sam --threads $THREAD --phred33
@@ -92,7 +91,6 @@ java -jar $PICARD MarkDuplicates REMOVE_SEQUENCING_DUPLICATES=true I=$i1.trimmed
 samtools flagstat $i1.final.bam >> $WKDIR/QC/$SNAME.final.flagstat_analysis.txt   # flagstat analysis
 
 fastqc -o $WKDIR/QC $i1.final.bam
-
 done
 
 multiqc -s -o $WKDIR/QC $WKDIR/QC
