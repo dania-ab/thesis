@@ -9,8 +9,8 @@ GENOME=$WKDIR/required_files/*.fasta
 FEATURES_H=$WKDIR/required_files/*.gff
 FEATURES_C=$WKDIR/required_files/*.gff
 FEATURES_S=$WKDIR/required_files/*.gff
-ADAPT5=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-ADAPT3=GATCGGAAGAGCACACGTCTGAACTCCAGTCACGGATGACTATCTCGTATGCCGTCTTCTGCTTG
+ADAPT5=$(cat $WKDIR/required_files/config_file.txt | grep Read1: | cut -d ":" -f 2)
+ADAPT3=$(cat $WKDIR/required_files/config_file.txt | grep Read2: | cut -d ":" -f 2)
 mkdir $WKDIR/QC
 PICARD=$WKDIR/required_files/picard.jar
 
