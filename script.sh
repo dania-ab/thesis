@@ -73,7 +73,7 @@ for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
 do
 i=$WKDIR/$SNAME
 i2=$(echo $i| sed 's/_1.fq.gz/_2.fq.gz/')
-cutadapt -j $THREAD -q 30 -O 1 -a $ADAPT5 -A $ADAPT3 -o $i.trimmed.fq.gz -p $i2.trimmed.fq.gz $i $i2  
+cutadapt -j $THREAD -q 30 -O 1 -a $ADAPT3 -g $ADAPT5 -A $ADAPT3 -G $ADAPT5 -o $i.trimmed.fq.gz -p $i2.trimmed.fq.gz $i $i2  
 echo "Adapters trimmed."
 
 #### (3) Mapping of all files with HISAT2 ####
