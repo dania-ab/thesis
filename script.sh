@@ -13,6 +13,9 @@ ADAPT5=$(cat $WKDIR/required_files/config_file.txt | grep Read1: | cut -d ":" -f
 ADAPT3=$(cat $WKDIR/required_files/config_file.txt | grep Read2: | cut -d ":" -f 2)
 mkdir $WKDIR/QC
 PICARD=$WKDIR/required_files/picard.jar
+rRNA_H=$WKDIR/required_files/hg38_rRNA.bed.gz
+rRNA_C=$WKDIR/required_files/*.bed
+rRNA_S=$WKDIR/required_files/*.bed
 
 # Prompts
 
@@ -82,7 +85,7 @@ hisat2 -x $GENOME -1 $i1.trimmed.fq.gz -2 $i2.trimmed.fq.gz -S $i1.trimmed.sam -
 samtools sort -@ $THREAD $i1.trimmed.fq.bam -o $i1.trimmed.fq.bam.sort.bam   # sort .bam files using samtools
 mv $i1.count.txt $WKDIR/required_files
 	
-bedtools intersect -a $i1.trimmed.fq.bam.sort.bam -b $rRNA -v > $i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam  # removal of reads mapping to rRNA loci
+bedtools intersect -a $i1.trimmed.fq.bam.sort.bam -b $rRNA_H $rRNA_C $rRNA_S -v > $i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam  # removal of reads mapping to rRNA loci
 
 # Labelling of duplicated reads and removal of optical duplicates
 java -jar $PICARD MarkDuplicates REMOVE_SEQUENCING_DUPLICATES=true I=$i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam O=$i1.final.bam M=$WKDIR/QC/$SNAME.markdup.metrics.txt
