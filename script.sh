@@ -5,17 +5,15 @@
 FILES=$(pwd)
 WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
-GENOME=$WKDIR/required_files/*.fasta
-FEATURES_H=$WKDIR/required_files/*.gff
-FEATURES_C=$WKDIR/required_files/*.gff
-FEATURES_S=$WKDIR/required_files/*.gff
-ADAPT5=$(cat $WKDIR/required_files/config_file.txt | grep Read1: | cut -d ":" -f 2)
-ADAPT3=$(cat $WKDIR/required_files/config_file.txt | grep Read2: | cut -d ":" -f 2)
+GENOME=$WKDIR/required_files/refgenomes.fasta
+FEATURES_H=$WKDIR/required_files/human.gff
+FEATURES_C=$WKDIR/required_files/sc.gff
+FEATURES_S=$WKDIR/required_files/albicans.gff
 mkdir $WKDIR/QC
 PICARD=$WKDIR/required_files/picard.jar
-rRNA_H=$WKDIR/required_files/hg38_rRNA.bed.gz
-rRNA_C=$WKDIR/required_files/*.bed
-rRNA_S=$WKDIR/required_files/*.bed
+rRNA_H=$WKDIR/required_files/rRNA_H.gff
+rRNA_C=$WKDIR/required_files/rRNA_CA.gff
+rRNA_S=$WKDIR/required_files/rRNA_SC.gff
 
 # Prompts
 
@@ -70,78 +68,90 @@ fi
 
 
 
-#### (2)  Adapter removal with cutadapt ####
+
+#### (3) Mapping of all files with ... ####
 
 for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
 do
-i=$WKDIR/$SNAME
+i1=$WKDIR/$SNAME
 i2=$(echo $i| sed 's/_1.fq.gz/_2.fq.gz/')
-cutadapt -j $THREAD -q 30 -O 1 -a $ADAPT3 -g $ADAPT5 -A $ADAPT3 -G $ADAPT5 -o $i.trimmed.fq.gz -p $i2.trimmed.fq.gz $i $i2  
-echo "Adapters trimmed."
 
-#### (3) Mapping of all files with HISAT2 ####
-hisat2 -x $GENOME -1 $i1.trimmed.fq.gz -2 $i2.trimmed.fq.gz -S $i1.trimmed.sam --threads $THREAD --phred33
+hisat2 -x $GENOME -1 $i1.fq.gz -2 $i2.fq.gz -S $i1.trimmed.sam --threads $THREAD --phred33
 
-samtools sort -@ $THREAD $i1.trimmed.fq.bam -o $i1.trimmed.fq.bam.sort.bam   # sort .bam files using samtools
+
+
+
+#### (4) Further processing of BAM files ####
+samtools sort -@ $THREAD $i1.fq.bam -o $i1.fq.bam.sort.bam   # sort .bam files using samtools
+
 mv $i1.count.txt $WKDIR/required_files
 	
-bedtools intersect -a $i1.trimmed.fq.bam.sort.bam -b $rRNA_H $rRNA_C $rRNA_S -v > $i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam  # removal of reads mapping to rRNA loci
-
+intersectBed -v -abam $i1.trimmed.fq.bam.sort.bam -b $rRNA_H > $i1.rRNAH.bam  # removal of reads mapping to rRNA loci
+intersectBed -v -abam $i1.rRNAH.bam -b $rRNA_C > $i1.rRNAH_CA.bam
+intersectBed -v -abam $i1.rRNAH.bam -b $rRNA_S > $i1.rRNA.bam
+ 
 # Labelling of duplicated reads and removal of optical duplicates
-java -jar $PICARD MarkDuplicates REMOVE_SEQUENCING_DUPLICATES=true I=$i1.trimmed.fq.bam.sort.bam.rRNAfilt.bam O=$i1.final.bam M=$WKDIR/QC/$SNAME.markdup.metrics.txt
-	
+java -jar $PICARD MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $i1.rRNA.bam -O $i1.final.bam -M $WKDIR/QC/$SNAME.markdup.metrics.txt
+
+# Index final bam file
+samtools index $i1.final.bam 
+
 #Quality control and statistics about mapped samples
 samtools flagstat $i1.final.bam >> $WKDIR/QC/$SNAME.final.flagstat_analysis.txt   # flagstat analysis
 
-fastqc -o $WKDIR/QC $i1.final.bam
+fastqc $i1.final.bam -o $WKDIR/QC 
 done
 
 multiqc -s -o $WKDIR/QC $WKDIR/QC
 
 
-
-#### (3) Count reads with HTSeq ####
+#### (5) Count reads with HTSeq ####
 
 mkdir $WKDIR/count
 mkdir $WKDIR/diff_expr_analysis
 
 for i in $WKDIR/*.markdup.bam
 do
-htseq-count -f bam -s no -t gene -i ID $i $FEATURES_H > $i.count.txt
-mv $i.count.txt $WKDIR/count
+htseq-count -f bam -r pos -s no -t gene -i ID $i $FEATURES_H > $i.count.txt
+mv $i.H.count.txt $WKDIR/count
 echo "Human transcripts done"
 done
 
 for i in $WKDIR/*.markdup.bam
 do
-htseq-count -f bam -s no -t gene -i ID $i $FEATURES_C > $i.count.txt
-mv $i.count.txt $WKDIR/count
+htseq-count -f bam -r pos -s no -t gene -i ID $i $FEATURES_C > $i.count.txt
+mv $i.CA.count.txt $WKDIR/count
 echo "Candida transcripts done"
 done
 
 for i in $WKDIR/*.markdup.bam
 do
 htseq-count -f bam -s no -t gene -i ID $i $FEATURES_S > $i.count.txt
-mv $i.count.txt $WKDIR/count
+mv $i.SC.count.txt $WKDIR/count
 echo "Saccharomyces transcripts done"
 done
 
 for i in $WKDIR/count/*.count.txt
 do
-head -n -5 $i > $i.crop.txt  # clear count files for flags
+sed '$d' "$i" | sed '$d' | sed '$d' | sed '$d' | sed '$d' > "$i.crop.txt"
 done
+
+
+
 
 cp $WKDIR/count/*.crop.txt $WKDIR/diff_expr_analysis
 cp $FILES/edgeR_analysis.R $WKDIR/diff_expr_analysis
 cp $FILES/Targets.txt $WKDIR/diff_expr_analysis
 
+
+
+
 # Preparation of coverage files for visualization in IGV
 
 mkdir $WKDIR/IGV_files
 
-for i in $WKDIR/*.markdup.bam
+for i in $WKDIR/*.final.bam
 do
-samtools index $i
 SNAME=$(echo $i | sed 's:/.*/::g')
 bamCoverage -b $i -o $WKDIR/IGV_files/$SNAME.bw --normalizeUsing CPM -p $THREAD
 done
