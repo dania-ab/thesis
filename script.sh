@@ -84,9 +84,7 @@ samtools sort -@ $THREAD $i1.fq.bam -o $i1.fq.bam.sort.bam   # sort .bam files u
 
 mv $i1.count.txt $WKDIR/required_files
 	
-intersectBed -v -abam $i1.trimmed.fq.bam.sort.bam -b $rRNA_H > $i1.rRNAH.bam  # removal of reads mapping to rRNA loci
-intersectBed -v -abam $i1.rRNAH.bam -b $rRNA_C > $i1.rRNAH_CA.bam
-intersectBed -v -abam $i1.rRNAH.bam -b $rRNA_S > $i1.rRNA.bam
+intersectBed -v -abam $i1.trimmed.fq.bam.sort.bam -b $rRNA_H  | intersectBed -v -b $rRNA_C -abam | intersectBed -v -b $rRNA_S -abam > $i1.rRNA.bam # not sure if -abam flag should be before or not
  
 # Labelling of duplicated reads and removal of optical duplicates
 java -jar $PICARD MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $i1.rRNA.bam -O $i1.final.bam -M $WKDIR/QC/$SNAME.markdup.metrics.txt
@@ -94,7 +92,7 @@ java -jar $PICARD MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $i1.rRNA.
 # Index final bam file
 samtools index $i1.final.bam 
 
-#Quality control and statistics about mapped samples
+# Quality control and statistics about mapped samples
 samtools flagstat $i1.final.bam >> $WKDIR/QC/$SNAME.final.flagstat_analysis.txt   # flagstat analysis
 
 fastqc $i1.final.bam -o $WKDIR/QC 
