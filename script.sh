@@ -20,8 +20,6 @@ rRNA_S=$WKDIR/required_files/rRNA_SC.gff
 echo 'Are the data in bam or fastq format?'
 read -p 'Specify file format (bam or fastq): ' FORMAT
 read -p 'Do you want to do a quality control of the raw data (yes or no): ' QCRAW
-read -p 'Are the libraries prepared in a strand-specific way? (yes or no): ' STRANDED
-read -p 'Are the data paired-end? (yes or no): ' PAIRED
 read -p 'How many threads (cores) should be used for the analysis (use 1 if you are not sure): ' THREAD
 
 
