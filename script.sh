@@ -72,7 +72,7 @@ do
 
 i1=$WKDIR/$SNAME
 i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
-i=$(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)' | sed 's/_L.*//')
+i=$($SNAME | sed 's/_L.*//') # test !!
 
 star --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
 
@@ -104,23 +104,26 @@ done
 mkdir $WKDIR/count
 mkdir $WKDIR/diff_expr_analysis
 
-for i in $WKDIR/*.markdup.bam
+for SNAME in $WKDIR/*.final.bam
 do
-htseq-count -f bam -r pos -s no -t gene -i ID $i $FEATURES_H > $i.H.count.txt
+i=$($SNAME | sed 's/.final.bam//')
+htseq-count -f bam -r pos -s no -t gene -i ID $WKDIR/$SNAME $FEATURES_H > $i.H.count.txt
 mv $i.H.count.txt $WKDIR/count
 echo "Human transcripts done"
 done
 
-for i in $WKDIR/*.markdup.bam
+for SNAME in $WKDIR/*.final.bam
 do
-htseq-count -f bam -r pos -s no -t gene -i ID $i $FEATURES_C > $i.CA.count.txt
+i=$($SNAME | sed 's/.final.bam//')
+htseq-count -f bam -r pos -s no -t gene -i ID $WKDIR/$SNAME $FEATURES_C > $i.CA.count.txt
 mv $i.CA.count.txt $WKDIR/count
 echo "Candida transcripts done"
 done
 
-for i in $WKDIR/*.markdup.bam
+for SNAME in $WKDIR/*.final.bam
 do
-htseq-count -f bam -s no -t gene -i ID $i $FEATURES_S > $i.SC.count.txt
+i=$($SNAME | sed 's/.final.bam//')
+htseq-count -f bam -s no -t gene -i ID $WKDIR/$SNAME $FEATURES_S > $i.SC.count.txt
 mv $i.SC.count.txt $WKDIR/count
 echo "Saccharomyces transcripts done"
 done
