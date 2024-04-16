@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SECONDS=0
+
 # Preparation and setup of required files 
 
 FILES=$(pwd)
@@ -65,26 +67,20 @@ exit
 fi
 
 
-
-
-#### (3) Mapping of all files with ... ####
+#### (2) Mapping of all files with STAR ####
 
 for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
 do
 i1=$WKDIR/$SNAME
 i2=$(echo $i| sed 's/_1.fq.gz/_2.fq.gz/')
 
-hisat2 -x $GENOME -1 $i1.fq.gz -2 $i2.fq.gz -S $i1.trimmed.sam --threads $THREAD --phred33
+star --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i1 $i1 --outSAMtype BAM SortedByCoordinate
 
-
-
-
-#### (4) Further processing of BAM files ####
-samtools sort -@ $THREAD $i1.fq.bam -o $i1.fq.bam.sort.bam   # sort .bam files using samtools
+#### (3) Further processing of BAM files ####
 
 mv $i1.count.txt $WKDIR/required_files
 	
-intersectBed -v -abam $i1.trimmed.fq.bam.sort.bam -b $rRNA_H  | intersectBed -v -b $rRNA_C -abam | intersectBed -v -b $rRNA_S -abam > $i1.rRNA.bam # not sure if -abam flag should be before or not
+intersectBed -v -abam $i1.STARAligned.sortedByCoord.out.bam -b $rRNA_H  | intersectBed -v -b $rRNA_C -abam | intersectBed -v -b $rRNA_S -abam > $i1.rRNA.bam # not sure if -abam flag should be before or not
  
 # Labelling of duplicated reads and removal of optical duplicates
 java -jar $PICARD MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $i1.rRNA.bam -O $i1.final.bam -M $WKDIR/QC/$SNAME.markdup.metrics.txt
@@ -98,10 +94,8 @@ samtools flagstat $i1.final.bam >> $WKDIR/QC/$SNAME.final.flagstat_analysis.txt 
 fastqc $i1.final.bam -o $WKDIR/QC 
 done
 
-multiqc -s -o $WKDIR/QC $WKDIR/QC
 
-
-#### (5) Count reads with HTSeq ####
+#### (4) Count reads with HTSeq ####
 
 mkdir $WKDIR/count
 mkdir $WKDIR/diff_expr_analysis
@@ -151,3 +145,6 @@ do
 SNAME=$(echo $i | sed 's:/.*/::g')
 bamCoverage -b $i -o $WKDIR/IGV_files/$SNAME.bw --normalizeUsing CPM -p $THREAD
 done
+
+duration=$SECONDS
+echo "$((duration / 60)) minutes and $((duration % 60)) seconds elapsed."
