@@ -71,27 +71,34 @@ fi
 
 for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
 do
-i1=$WKDIR/$SNAME
-i2=$(echo $i| sed 's/_1.fq.gz/_2.fq.gz/')
 
-star --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i1 $i1 --outSAMtype BAM SortedByCoordinate
+i1=$WKDIR/$SNAME
+i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
+i=$(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)' | sed 's/_L.*//')
+
+star --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
+
 
 #### (3) Further processing of BAM files ####
 
 mv $i1.count.txt $WKDIR/required_files
-	
-intersectBed -v -abam $i1.STARAligned.sortedByCoord.out.bam -b $rRNA_H  | intersectBed -v -b $rRNA_C -abam | intersectBed -v -b $rRNA_S -abam > $i1.rRNA.bam # not sure if -abam flag should be before or not
- 
+
+# Removal of rRNA
+
+intersectBed -v -abam $i.STARAligned.sortedByCoord.out.bam -b $rRNA_H > $i.rRNA_H.bam 
+intersectBed -v -abam $i.rRNA_H.bam -b $rRNA_C > $i.rRNA_H_C.bam 
+intersectBed -v -abam $i.rRNA_H_C.bam -b $rRNA_S > $i.rRNA.final.bam 
+
 # Labelling of duplicated reads and removal of optical duplicates
-java -jar $PICARD MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $i1.rRNA.bam -O $i1.final.bam -M $WKDIR/QC/$SNAME.markdup.metrics.txt
+java -jar $PICARD MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $i.rRNA.final.bam -O $i.final.bam -M $WKDIR/QC/$i.markdup.metrics.txt
 
 # Index final bam file
-samtools index $i1.final.bam 
+samtools index $i.final.bam 
 
 # Quality control and statistics about mapped samples
-samtools flagstat $i1.final.bam >> $WKDIR/QC/$SNAME.final.flagstat_analysis.txt   # flagstat analysis
+samtools flagstat $i.final.bam >> $WKDIR/QC/$i.final.flagstat_analysis.txt   # flagstat analysis
 
-fastqc $i1.final.bam -o $WKDIR/QC 
+fastqc $i.final.bam -o $WKDIR/QC 
 done
 
 
