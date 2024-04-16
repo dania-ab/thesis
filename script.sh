@@ -24,7 +24,6 @@ read -p 'Specify file format (bam or fastq): ' FORMAT
 read -p 'Do you want to do a quality control of the raw data (yes or no): ' QCRAW
 read -p 'How many threads (cores) should be used for the analysis (use 1 if you are not sure): ' THREAD
 
-
 #### (1) QC of raw data ####
 
 if [ $QCRAW == 'yes' ]
@@ -66,7 +65,6 @@ echo 'Invalid file format! Options are "bam" or "fastq".'
 exit
 fi
 
-
 #### (2) Mapping of all files with STAR ####
 
 for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
@@ -77,7 +75,6 @@ i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
 i=$(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)' | sed 's/_L.*//')
 
 star --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
-
 
 #### (3) Further processing of BAM files ####
 
@@ -131,26 +128,6 @@ done
 for i in $WKDIR/count/*.count.txt
 do
 sed '$d' "$i" | sed '$d' | sed '$d' | sed '$d' | sed '$d' > "$i.crop.txt"
-done
-
-
-
-
-cp $WKDIR/count/*.crop.txt $WKDIR/diff_expr_analysis
-cp $FILES/edgeR_analysis.R $WKDIR/diff_expr_analysis
-cp $FILES/Targets.txt $WKDIR/diff_expr_analysis
-
-
-
-
-# Preparation of coverage files for visualization in IGV
-
-mkdir $WKDIR/IGV_files
-
-for i in $WKDIR/*.final.bam
-do
-SNAME=$(echo $i | sed 's:/.*/::g')
-bamCoverage -b $i -o $WKDIR/IGV_files/$SNAME.bw --normalizeUsing CPM -p $THREAD
 done
 
 duration=$SECONDS
