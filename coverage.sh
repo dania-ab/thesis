@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Get the coverage percentages
 
 for SNAME in $(ls | egrep '\.bam$') 
