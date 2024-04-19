@@ -41,8 +41,6 @@ do
 i=$WKDIR/$SNAME
 fastqc -o $WKDIR/QC_raw $i
 done
-fi
-multiqc -o $WKDIR/QC_raw $WKDIR/QC_raw
 else
 echo 'No QC of raw data done.'
 fi
@@ -66,7 +64,7 @@ fi
 
 #### (2) Mapping of all files with STAR ####
 
-for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(q\.gz$)')
+for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(q.*gz$)')
 do
 
 i1=$WKDIR/$SNAME
