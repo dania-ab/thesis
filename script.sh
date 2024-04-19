@@ -4,7 +4,9 @@ SECONDS=0
 
 # Preparation and setup of required files 
 
-WKDIR=$(pwd)
+
+FILES=$(pwd)
+WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
 FEATURES_H=$WKDIR/required_files/human.gff
 FEATURES_C=$WKDIR/required_files/sc.gff
@@ -39,6 +41,8 @@ do
 i=$WKDIR/$SNAME
 fastqc -o $WKDIR/QC_raw $i
 done
+fi
+multiqc -o $WKDIR/QC_raw $WKDIR/QC_raw
 else
 echo 'No QC of raw data done.'
 fi
@@ -69,7 +73,7 @@ i1=$WKDIR/$SNAME
 i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
 i=$(echo $i1 | sed 's/_L.*//')
 
-star --runThreadN $THREAD --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
+star --runThreadN $THREAD --genomeDir ~/Desktop --readFilesIn $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
 mv $i.STARAligned.sortedByCoord.out.bam $WKDIR
 #### (3) Further processing of BAM files ####
 
@@ -89,6 +93,7 @@ samtools index $i.final.bam
 samtools flagstat $i.final.bam >> $WKDIR/QC/$i.final.flagstat_analysis.txt   # flagstat analysis
 
 fastqc $i.final.bam -o $WKDIR/QC 
+multiqc -o $WKDIR/QC $WKDIR/QC
 done
 
 
