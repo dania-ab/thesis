@@ -4,10 +4,8 @@ SECONDS=0
 
 # Preparation and setup of required files 
 
-FILES=$(pwd)
-WKDIR=$(echo $FILES | sed 's:/required_files::g')
+WKDIR=$(pwd)
 
-GENOME=$WKDIR/required_files/refgenomes.fna
 FEATURES_H=$WKDIR/required_files/human.gff
 FEATURES_C=$WKDIR/required_files/sc.gff
 FEATURES_S=$WKDIR/required_files/albicans.gff
@@ -36,7 +34,7 @@ do
 fastqc -o $WKDIR/QC_raw $i
 done
 else	
-for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
+for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(\.q\.gz$)')
 do
 i=$WKDIR/$SNAME
 fastqc -o $WKDIR/QC_raw $i
@@ -64,14 +62,14 @@ fi
 
 #### (2) Mapping of all files with STAR ####
 
-for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(q.*gz$)')
+for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
 do
 
 i1=$WKDIR/$SNAME
 i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
 i=$(echo $i1 | sed 's/_L.*//')
 
-star --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
+star --runThreadN $THREAD --genomeDir ~/Desktop $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
 mv $i.STARAligned.sortedByCoord.out.bam $WKDIR
 #### (3) Further processing of BAM files ####
 
