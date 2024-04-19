@@ -4,7 +4,6 @@ SECONDS=0
 
 # Preparation and setup of required files 
 
-
 FILES=$(pwd)
 WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
