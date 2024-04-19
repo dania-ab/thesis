@@ -36,7 +36,7 @@ do
 fastqc -o $WKDIR/QC_raw $i
 done
 else	
-for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(q\.gz$)')
+for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(L*_1\.fq\.gz$)')
 do
 i=$WKDIR/$SNAME
 fastqc -o $WKDIR/QC_raw $i
