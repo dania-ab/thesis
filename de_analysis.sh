@@ -1,3 +1,4 @@
+#!/bin/bash
 
 FILES=$(pwd)
 WKDIR=$(echo $FILES | sed 's:/required_files::g')
