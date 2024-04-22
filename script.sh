@@ -71,27 +71,28 @@ do
 i1=$WKDIR/$SNAME
 i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
 i=$(echo $i1 | sed 's/_L.*//')
+ial=$(echo $i1 | sed 's/_L.*/Aligned/')
 
 star --runThreadN $THREAD --genomeDir ~/Desktop --readFilesIn $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
-mv $i.STARAligned.sortedByCoord.out.bam $WKDIR
+
 #### (3) Further processing of BAM files ####
 
 # Removal of rRNA
 
-intersectBed -v -abam $i.STARAligned.sortedByCoord.out.bam -b $rRNA_H > $i.rRNA_H.bam 
-intersectBed -v -abam $i.rRNA_H.bam -b $rRNA_C > $i.rRNA_H_C.bam 
-intersectBed -v -abam $i.rRNA_H_C.bam -b $rRNA_S > $i.rRNA.bam 
+intersectBed -v -abam $ial.sortedByCoord.out.bam -b $rRNA_H > $ial.rRNA_H.bam 
+intersectBed -v -abam $ial.rRNA_H.bam -b $rRNA_C > $ial.rRNA_H_C.bam 
+intersectBed -v -abam $ial.rRNA_H_C.bam -b $rRNA_S > $ial.rRNA.bam 
 
 # Labelling of duplicated reads and removal of optical duplicates
-java -jar $WKDIR/required_files/picard.jar MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $i.rRNA.bam  -O $i.final.bam -M $i.bam.markdup.metrics.txt
+java -jar $WKDIR/required_files/picard.jar MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $ial.rRNA.bam  -O $ial.final.bam -M $ial.bam.markdup.metrics.txt
 
 # Index final bam file
-samtools index $i.final.bam 
+samtools index $ial.final.bam 
 
 # Quality control and statistics about mapped samples
-samtools flagstat $i.final.bam >> $WKDIR/QC/$i.final.flagstat_analysis.txt   # flagstat analysis
+samtools flagstat $ial.final.bam >> $WKDIR/QC/$ial.final.flagstat_analysis.txt   # flagstat analysis
 
-fastqc $i.final.bam -o $WKDIR/QC 
+fastqc $ial.final.bam -o $WKDIR/QC 
 multiqc -o $WKDIR/QC $WKDIR/QC
 done
 
