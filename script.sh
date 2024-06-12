@@ -84,7 +84,7 @@ intersectBed -v -abam $ial.rRNA_H.bam -b $rRNA_C > $ial.rRNA_H_C.bam
 intersectBed -v -abam $ial.rRNA_H_C.bam -b $rRNA_S > $ial.rRNA.bam 
 
 # Labelling of duplicated reads and removal of optical duplicates
-java -jar $WKDIR/required_files/picard.jar MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $ial.rRNA.bam  -O $ial.final.bam -M $ial.bam.markdup.metrics.txt
+picard MarkDuplicates -REMOVE_SEQUENCING_DUPLICATES true -I $ial.rRNA.bam  -O $ial.final.bam -M $ial.bam.markdup.metrics.txt
 
 # Index final bam file
 samtools index $ial.final.bam 
