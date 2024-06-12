@@ -26,40 +26,40 @@ read -p 'How many threads (cores) should be used for the analysis (use 1 if you 
 
 if [ $QCRAW == 'yes' ]
 then 
-mkdir $WKDIR/QC_raw
-echo 'Quality control of raw data:'
+  mkdir $WKDIR/QC_raw
+  echo 'Quality control of raw data:'
 if [ $FORMAT == 'bam' ]
 then
-for i in $WKDIR/*.bam
-do
-fastqc -o $WKDIR/QC_raw $i
-done
+  for i in $WKDIR/*.bam
+  do
+    FastQC -o $WKDIR/QC_raw $i
+  done
 else	
-for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(\.q\.gz$)')
-do
-i=$WKDIR/$SNAME
-fastqc -o $WKDIR/QC_raw $i
-done
+  for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(\.q\.gz$)')
+  do
+    i=$WKDIR/$SNAME
+    FastQC -o $WKDIR/QC_raw $i
+  done
 fi
-multiqc -o $WKDIR/QC_raw $WKDIR/QC_raw
+  multiqc -o $WKDIR/QC_raw $WKDIR/QC_raw
 else
-echo 'No QC of raw data done.'
+  echo 'No QC of raw data done.'
 fi
 
 # Convert .bam to .fastq format
 
 if [ $FORMAT == 'bam' ]
 then
-echo 'File format is bam.'
-for i in $WKDIR/*.bam
-do
-bamToFastq -i $i -fq $i.fq
-done
+  echo 'File format is bam.'
+  for i in $WKDIR/*.bam
+  do
+    bamToFastq -i $i -fq $i.fq
+  done
 elif [ $FORMAT == 'fastq' ]
 then
-echo 'File format is fastq.'
+  echo 'File format is fastq.'
 else
-echo 'Invalid file format! Options are "bam" or "fastq".'
+  echo 'Invalid file format! Options are "bam" or "fastq".'
 exit
 fi
 
@@ -73,7 +73,7 @@ i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
 i=$(echo $i1 | sed 's/_L.*//')
 ial=$(echo $i1 | sed 's/_L.*/Aligned/')
 
-star --runThreadN $THREAD --genomeDir ~/Desktop --readFilesIn $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
+STAR --runThreadN $THREAD --genomeDir ~/Desktop --readFilesIn $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
 
 #### (3) Further processing of BAM files ####
 
