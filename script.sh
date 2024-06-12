@@ -41,6 +41,7 @@ i=$WKDIR/$SNAME
 fastqc -o $WKDIR/QC_raw $i
 done
 fi
+multiqc -o $WKDIR/QC_raw $WKDIR/QC_raw
 else
 echo 'No QC of raw data done.'
 fi
@@ -72,7 +73,7 @@ i2=$(echo $i1 | sed 's/_1.fq.gz/_2.fq.gz/')
 i=$(echo $i1 | sed 's/_L.*//')
 ial=$(echo $i1 | sed 's/_L.*/Aligned/')
 
-STAR --runThreadN $THREAD --genomeDir ~/Desktop --readFilesIn $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
+star --runThreadN $THREAD --genomeDir ~/Desktop --readFilesIn $i1 $i2 --readFilesCommand gunzip -c --outFileNamePrefix $i --outSAMtype BAM SortedByCoordinate
 
 #### (3) Further processing of BAM files ####
 
