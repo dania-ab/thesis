@@ -113,7 +113,7 @@ done
 for SNAME in $(ls $WKDIR | egrep '\.final\.bam$')
 do
 i=$(echo $SNAME | sed 's/.final.bam//')
-htseq-count -f bam -r pos -s no -t gene -i ID $WKDIR/$SNAME $FEATURES_C > $i.C.count.txt
+htseq-count -f bam -r pos -s no -t gene -i ID $WKDIR/$SNAME $FEATURES_C > $i.CA.count.txt
 mv $i.CA.count.txt $WKDIR/count
 echo "Candida transcripts done"
 done
@@ -121,7 +121,7 @@ done
 for SNAME in $(ls $WKDIR | egrep '\.final\.bam$')
 do
 i=$(echo $SNAME | sed 's/.final.bam//')
-htseq-count -f bam -s no -t gene -i ID $WKDIR/$SNAME $FEATURES_S > $i.S.count.txt
+htseq-count -f bam -s no -t gene -i ID $WKDIR/$SNAME $FEATURES_S > $i.SC.count.txt
 mv $i.SC.count.txt $WKDIR/count
 echo "Saccharomyces transcripts done"
 done
