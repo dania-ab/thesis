@@ -38,7 +38,7 @@ else
   for SNAME in $(ls $WKDIR | egrep '(\.f.*q$)|(\.q\.gz$)')
   do
     i=$WKDIR/$SNAME
-    FastQC -o $WKDIR/QC_raw $i
+    FASTQC -o $WKDIR/QC_raw $i
   done
 fi
   multiqc -o $WKDIR/QC_raw $WKDIR/QC_raw
