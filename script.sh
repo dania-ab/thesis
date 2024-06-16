@@ -8,8 +8,8 @@ FILES=$(pwd)
 WKDIR=$(echo $FILES | sed 's:/required_files::g')
 
 FEATURES_H=$WKDIR/required_files/human.gff
-FEATURES_C=$WKDIR/required_files/sc.gff
-FEATURES_S=$WKDIR/required_files/albicans.gff
+FEATURES_S=$WKDIR/required_files/sc.gff
+FEATURES_C=$WKDIR/required_files/albicans.gff
 mkdir $WKDIR/QC
 rRNA_H=$WKDIR/required_files/rRNA_H.gff
 rRNA_C=$WKDIR/required_files/rRNA_CA.gff
